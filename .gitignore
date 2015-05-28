@@ -1,0 +1,6 @@
+ebin
+rel
+_rel
+deps
+.eunit
+*.plt
