@@ -1,0 +1,40 @@
+DROP TABLE IF EXISTS trades;
+DROP TABLE IF EXISTS currencies;
+DROP TABLE IF EXISTS origins;
+DROP TABLE IF EXISTS traders;
+
+CREATE TABLE traders (
+	id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    ext_id	INT UNSIGNED NOT NULL,
+    PRIMARY KEY( id ),
+    UNIQUE( ext_id ) ) ENGINE=InnoDB CHARSET=utf8;
+    
+CREATE TABLE origins (
+	id 		INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    name	VARCHAR( 20 ) NOT NULL,
+    PRIMARY KEY( id ),
+    UNIQUE( name ) ) ENGINE=InnoDB CHARSET=utf8;
+    
+CREATE TABLE currencies (
+	id 		INT UNSIGNED NOT NULL AUTO_INCREMENT,
+	name 	VARCHAR( 20 ) NOT NULL,
+	PRIMARY KEY( id ),
+	UNIQUE( name ) ) ENGINE=InnoDB CHARSET=utf8;
+    
+CREATE TABLE trades (
+	id 				INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    trader 			INT UNSIGNED NOT NULL,
+    origin			INT UNSIGNED NOT NULL,
+    from_currency	INT UNSIGNED NOT NULL,
+    to_currency		INT UNSIGNED NOT NULL,
+    from_amount 	DECIMAL( 20, 5 ) NOT NULL,
+    to_amount		DECIMAL( 20, 5 ) NOT NULL,
+    rate			DECIMAL( 20, 5 ) NOT NULL,
+    time 			TIMESTAMP NOT NULL,
+    PRIMARY KEY( id ),
+    INDEX( time ),
+    INDEX( rate ),
+	FOREIGN KEY( trader ) 			REFERENCES traders( id ) ON DELETE RESTRICT ON UPDATE CASCADE,
+    FOREIGN KEY( origin ) 			REFERENCES origins( id ) ON DELETE RESTRICT ON UPDATE CASCADE,
+    FOREIGN KEY( from_currency ) 	REFERENCES currencies( id ) ON DELETE RESTRICT ON UPDATE CASCADE,
+    FOREIGN KEY( to_currency ) 		REFERENCES currencies( id ) ON DELETE RESTRICT ON UPDATE CASCADE ) ENGINE=InnoDB CHARSET=utf8;

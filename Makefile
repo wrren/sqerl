@@ -1,3 +1,3 @@
 PROJECT = sqerl
-DEPS = cowboy emysql
+DEPS = cowboy emysql lager jsx
 include erlang.mk

@@ -1,23 +1,25 @@
 {application, sqerl, [
-	{ description, "Squirrel Trade Processor" },
-	{ vsn, "0.1.0" },
-	{ id, "git" },
-	{ modules, [] },
-	{ registered, [] },
-	{ applications, [
+	{description, "Squirrel Trade Processor"},
+	{vsn, "0.1.0"},
+	{id, "git"},
+	{modules,[]},
+	{registered, []},
+	{applications, [
 		kernel,
 		emysql,
+		lager,
 		cowboy,
 		stdlib
-	] },
-	{ mod, { sqerl_app, [] } },
-	{ env,
+	]},
+	{mod, {sqerl_app, []}},
+	{env,
 		[
 			%% sqerl database config
 			{ sqerl_db_hostname,					"localhost" },
 			{ sqerl_db_username,					"" },
 			{ sqerl_db_password,					"" },
 			{ sqerl_db_database,					"" },
+			{ sqerl_db_port,					3306 },
 			{ sqerl_db_pool_size,					20 },
 
 			%% sqerl rate limiting
@@ -25,4 +27,4 @@
 			{ sqerl_rate_limit_window,				600 },		%% Rate Limit Window in Seconds
 			{ sqerl_rate_limit,					1000 }		%% Max Requests Per Window
 		] }
-]}.
+] }.
