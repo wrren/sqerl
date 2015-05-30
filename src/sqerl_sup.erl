@@ -8,6 +8,8 @@ start_link() ->
 	supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 init([]) ->
-	Props = [],
-	{ ok, { { one_for_one, 1, 5 }, 
-		Props } }.
+	Children = [ { 	trade_event, 
+			{ gen_event, start_link, [ { global, trade_event } ] },
+        		permanent, 5000, worker, [ dynamic ] } ],
+
+	{ ok, { { one_for_one, 1, 5 }, Children } }.

@@ -1,19 +1,19 @@
 -module( sqerl_trade ).
 -author( "Warren Kenny <warren.kenny@gmail.com>" ).
 
--export( [ from_json/1 ] ).
+-export( [ from_json/1, to_json/1, subscribe/2, unsubscribe/2 ] ).
 
--include( "sqerl_trade.hrl" ).
+-include( "trade/sqerl_trade.hrl" ).
 
 %%
-%%	Convert a monetary value in string form to a money tuple. This function will crash when provided with
-%%	unparseable representations of money.
+%%	Convert a binary string containing JSON describing a trade to a
+%%	sqerl_trade record.
 %%
 %% Parameters:
-%%	Value	- String representing an amount of money
+%%	JSON	- Binary string containing JSON trade data
 %%
 %% Returns:
-%%	Value represented in the form of a money tuple
+%%	sqerl_trade record
 %%
 -spec from_json( binary() ) -> #sqerl_trade{}.
 from_json( JSON ) ->
@@ -31,3 +31,31 @@ from_json( JSON ) ->
 	%% Incoming JSON can't have a DB ID field, but everything else should be present
 	{ [ id ], Trade } = sqerl_record:from_json( JSON, Keys, sqerl_trade, record_info( fields, sqerl_trade ) ),
 	Trade.
+
+%%
+%%	Convert a sqerl_trade record to a binary string containing the trade data
+%%	encoded using JSON
+%%
+%% Parameters:
+%%	Trade	- sqerl_trade record
+%%
+%% Returns:
+%%	sqerl_trade record encoded to JSON in binary string form
+%%
+-spec to_json( #sqerl_trade{} ) -> binary().
+to_json( Trade = #sqerl_trade{} ) ->
+	sqerl_record:to_json( Trade, #{}, record_info( fields, sqerl_trade ) ).
+
+%%
+%%	Convenience event subscription function. Adds the provided module as an event handler to the
+%%	trade gen_event manager, passing the provided arguments in the add_sup_handler call.
+%%
+subscribe( Module, Args ) ->
+	gen_event:add_sup_handler( { global, trade_event }, Module, Args ).
+
+%%
+%%	Convenience event unsubscribe function. Deletes the provided event handler from the
+%%	trade gen_event manager handler list.
+%%
+unsubscribe( Module, Args ) ->
+	gen_event:delete_handler( { global, trade_event }, Module, Args ).

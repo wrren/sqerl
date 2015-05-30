@@ -13,11 +13,13 @@ start( _Type, _Args ) ->
 
 	emysql:add_pool( sqerl_db_pool, PoolSize, Username, Password, Hostname, Port, Database, utf8 ),
 
-	Dispatch = cowboy_router:compile( [
-		{'_', [ { "/trades", sqerl_trade_handler, [ sqerl_trade_access ] } ] }
-		]),
-	{ ok, _ } = cowboy:start_http( my_http_listener, 100, [ { port, 8080 } ],
-		[ { env, [ { dispatch, Dispatch } ] } ]
+	Dispatch = cowboy_router:compile( [	{ '_', [ 	{ "/trades", sqerl_trade_handler, [ sqerl_trade_access ] }, 
+								{ "/feed", sqerl_feed_handler, [] } ] }	] ),
+
+	{ ok, _ } = cowboy:start_http( 	my_http_listener, 
+					100, 
+					[ { port, 8080 } ],
+					[ { env, [ { dispatch, Dispatch } ] } ]
 		),
 	sqerl_sup:start_link().
 

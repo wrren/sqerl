@@ -33,7 +33,7 @@ do
 
 	echo ""
 
-	sleep 1
+	sleep 0.1
 done
 
 

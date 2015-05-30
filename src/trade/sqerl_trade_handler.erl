@@ -1,6 +1,9 @@
 -module( sqerl_trade_handler ).
 -behaviour( cowboy_http_handler ).
 
+%%
+%%	Cowboy Handler Callbacks
+%%
 -export( [ init/3, rest_init/2, handle/2, allowed_methods/2, content_types_provided/2, content_types_accepted/2, from_json/2, terminate/3 ] ).
 
 -record( state, { access } ).
@@ -35,9 +38,18 @@ content_types_provided( Req, State ) ->
 %%
 from_json( Req, State = #state{ access = AccessModule } ) ->
 	{ ok, Body, Req2 } = cowboy_req:body( Req ),
+	%% Parse the JSON body and create a sqerl_trade record
 	Trade = sqerl_trade:from_json( Body ),
+	%% Notify any event handlers that a new trade has been received
+	gen_event:notify( { global, trade_event }, { new_trade, Trade } ),
+	%% Write the trade to storage
 	AccessModule:record( Trade ),
-	{ true, Req2, State }.
+	%% Respond
+	{ ok, Req3 } = cowboy_req:reply( 	201, 
+						[ {<<"content-type">>, <<"application/json">>} ], 
+						jsx:encode( #{ <<"result">> => <<"success">> } ), 
+						Req2 ),
+	{ halt, Req3, State }.
 
 %%
 %%	The module only acceps JSON content
@@ -45,7 +57,10 @@ from_json( Req, State = #state{ access = AccessModule } ) ->
 content_types_accepted( Req, State ) ->
 	{ [ { { <<"application">>, <<"json">>, [] }, from_json } ], Req, State }.
 
-handle( Req, State = #state{} ) ->
+%%
+%%	Unused Callback
+%%
+handle( Req, State ) ->
 	{ ok, Req, State }.
 
 %%

@@ -1,7 +1,7 @@
 -module( sqerl_record ).
 -author( "Warren Kenny <warren.kenny@gmail.com>" ).
 
--export( [ from_json/4 ] ).
+-export( [ from_json/4, to_json/3 ] ).
 
 %%
 %%	Given JSON in binary form, a mapping of
@@ -30,7 +30,40 @@ from_json( [ Key | Fields ], JSON, KeyMap, NotFound, RecordName, Result ) ->
 				{ ok, Value } 	-> from_json( Fields, JSON, KeyMap, NotFound, RecordName, [ Value | Result ] );
 				_		-> from_json( Fields, JSON, KeyMap, [ Key | NotFound ], RecordName, [ undefined | Result ] )
 			end;
-		_ -> from_json( Fields, JSON, KeyMap, [ Key | NotFound ], RecordName, [ undefined | Result ] )
+		_ -> 
+			case maps:find( atom_to_binary( Key, utf8 ), JSON ) of
+				{ ok, Value } 	-> from_json( Fields, JSON, KeyMap, NotFound, RecordName, [ Value | Result ] );
+				_		-> from_json( Fields, JSON, KeyMap, [ Key | NotFound ], RecordName, [ undefined | Result ] )
+			end
 	end;
 
 from_json( [], _, _, NotFound, RecordName, Result ) -> { NotFound, list_to_tuple( [ RecordName | lists:reverse( Result ) ] ) }.
+
+%%
+%%	Given a record, an optional mapping between record field names and JSON key name, and
+%%	the list of contained fields, generate a binary string containing the record's data
+%%	encoded to JSON.
+%%
+%% Parameters:
+%%	Record		- Record to be encoded
+%%	KeyMap		- Mapping of record field atoms to binary string JSON keys
+%%	RecordFields	- List of fields in the record, obtained from record_info call
+%%
+%% Returns:
+%%	Record converted to JSON binary string
+%%
+-spec to_json( tuple(), #{}, [ atom() ] ) -> binary().
+to_json( Record, KeyMap, RecordFields )->
+	ValueList = tuple_to_list( Record ),
+	[ _RecordName | Values ] = ValueList,
+	to_json( Values, KeyMap, RecordFields, #{} ).
+
+-spec to_json( [ term() ], #{}, [ atom() ], #{} ) -> binary().
+to_json( [ Value | VT ], KeyMap, [ FieldName | FT ], RecordMap ) ->
+	case maps:find( FieldName, KeyMap ) of
+		{ ok, JSONKey }		-> to_json( VT, KeyMap, FT, maps:put( JSONKey, Value, RecordMap ) );
+		_			-> to_json( VT, KeyMap, FT, maps:put( atom_to_binary( FieldName, utf8 ), Value, RecordMap ) )
+	end;
+
+to_json( [], _, _, RecordMap ) -> jsx:encode( RecordMap ). 
+

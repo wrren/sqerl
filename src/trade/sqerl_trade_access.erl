@@ -1,7 +1,7 @@
 -module( sqerl_trade_access ).
 -author( "Warren Kenny <warren.kenny@gmail.com>" ).
 
--include( "sqerl_trade.hrl" ).
+-include( "trade/sqerl_trade.hrl" ).
 
 -export( [ by_id/1, by_trader/3, by_origin/3, record/1 ] ).
 
@@ -134,7 +134,7 @@ record( #sqerl_trade{ trader = Trader, origin = Origin, from_currency = FromCurr
 	emysql:prepare( sqerl_trade_record_trader, 	<<"INSERT INTO traders ( ext_id ) VALUES ( ? ) ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID( id )">> ),
 	emysql:prepare( sqerl_trade_record_origin, 	<<"INSERT INTO origins ( name ) VALUES ( ? ) ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID( id )">> ),
 	emysql:prepare( sqerl_trade_record_currency, 	<<"INSERT INTO currencies ( name ) VALUES ( ? ) ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID( id )">> ),
-	emysql:prepare( sqerl_trade_record_trade, 	<<"INSERT INTO trades ( trader, origin, from_currency, to_currency, from_amount, to_amount, rate, time ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ? )">> ),
+	emysql:prepare( sqerl_trade_record_trade, 	<<"INSERT INTO trades ( trader, origin, from_currency, to_currency, from_amount, to_amount, rate, time ) VALUES ( ?, ?, ?, ?, ?, ?, ?, STR_TO_DATE( ?, '%e-%B-%y %k:%i:%s' ) )">> ),
 
 	{ ok, emysql:insert_id( emysql:execute( sqerl_db_pool, sqerl_trade_record_trade, [ 	emysql:insert_id( emysql:execute( sqerl_db_pool, sqerl_trade_record_trader, 	[ Trader ] ) ), 
 												emysql:insert_id( emysql:execute( sqerl_db_pool, sqerl_trade_record_origin, 	[ Origin ] ) ), 
