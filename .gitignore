@@ -1,7 +1,6 @@
 /.erlang.mk/
 /logs/
 ebin
-rel
 _rel
 deps
 .eunit

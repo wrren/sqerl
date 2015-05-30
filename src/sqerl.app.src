@@ -9,7 +9,8 @@
 		emysql,
 		lager,
 		cowboy,
-		stdlib
+		stdlib,
+		jsx
 	]},
 	{mod, {sqerl_app, []}},
 	{env,

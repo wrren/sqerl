@@ -2,36 +2,24 @@
 -author( "Warren Kenny <warren.kenny@gmail.com>" ).
 
 -include( "sqerl_trade.hrl" ).
--include_lib("emysql/include/emysql.hrl").
 
 -export( [ by_id/1, by_trader/3, by_origin/3, record/1 ] ).
 
 %%
-%%	Convert a result set into a list of sqerl_trade records
+%%	Convert an emysql result into sqerl_trade records or an error message
 %%
 %% Parameters:
-%%	result_packet	- emysql result packet
+%%	Result		- emysql execute result
+%%	Count		- single/many - Indicates whether a single record or a list should be returned
 %%
 %% Returns:
-%%	List of sqerl_trade records
+%%	{ ok, #sqerl_trade{} } | { ok, [ #sqerl_trade{} ] }	on success
+%%	{ error, message }					on failure
 %%
-convert( #result_packet{ rows = Rows } ) -> convert( Rows, [] );
-
-convert( [ ID, Trader, Origin, FromCurrency, ToCurrency, FromAmount, ToAmount, Rate, Time ] ) ->
-	#sqerl_trade{ 	id 		= ID, 
-			trader 		= Trader, 
-			origin 		= Origin, 
-			from_currency 	= FromCurrency, 
-			to_currency 	= ToCurrency,
-			from_amount 	= sqerl_trade:to_money( FromAmount ),
-			to_amount 	= sqerl_trade:to_money( ToAmount ),
-			rate 		= sqerl_trade:to_money( Rate ),
-			time 		= Time }.
-
-convert( [ H | T ], Converted ) ->
-	convert( T, [ convert( H ) | Converted ] );
-
-convert( [], Converted ) -> lists:reverse( Converted ).
+result( Result, Count ) 		-> result( emysql:result_type( Result ), Result, Count ).
+result( result, Result, single )	-> { ok, lists:nth( 1, emysql:as_record( Result, sqerl_trade, record_info( fields, sqerl_trade ) ) ) };
+result( result, Result, _ )		-> { ok, emysql:as_record( Result, sqerl_trade, record_info( fields, sqerl_trade ) ) };
+result( error, _, _ )			-> { error, database_error }.
 
 %%
 %%	Retrieve a specific trade by ID
@@ -61,10 +49,7 @@ by_id( ID ) ->
 							JOIN currencies AS tc ON rc.id = t.to_currency
 						WHERE t.id = ? LIMIT 1">> ),
 
-	case emysql:execute( sqerl_db_pool, sqerl_trade_by_id, [ ID ] ) of
-		Result = #result_packet{}	-> { ok, lists:nth( 1, convert( Result ) ) };
-		#error_packet{ msg = Message }	-> { error, Message }
-	end.
+	result( emysql:execute( sqerl_db_pool, sqerl_trade_by_id, [ ID ] ), single ).
 
 %%
 %%	Retrieve a list of trades made by the specified user in order of ascending trade time
@@ -98,10 +83,7 @@ by_trader( Trader, Limit, Offset ) ->
 							ORDER BY t.time ASC
 							LIMIT ? OFFSET ?">> ),
 
-	case emysql:execute( sqerl_db_pool, sqerl_trade_by_trader, [ Trader, Limit, Offset ] ) of
-		Result = #result_packet{}	-> { ok, convert( Result ) };
-		#error_packet{ msg = Message }	-> { error, Message }
-	end.
+	result( emysql:execute( sqerl_db_pool, sqerl_trade_by_trader, [ Trader, Limit, Offset ] ), many ).
 
 %%
 %%	Retrieve a list of trades made in the specified origin in order of ascending trade time
@@ -135,10 +117,7 @@ by_origin( Origin, Limit, Offset ) ->
 							ORDER BY t.time ASC
 							LIMIT ? OFFSET ?">> ),
 
-	case emysql:execute( sqerl_db_pool, sqerl_trade_by_origin, [ Origin, Limit, Offset ] ) of
-		Result = #result_packet{}	-> { ok, convert( Result ) };
-		#error_packet{ msg = Message }	-> { error, Message }
-	end.
+	result( emysql:execute( sqerl_db_pool, sqerl_trade_by_origin, [ Origin, Limit, Offset ] ), many ).
 
 %%
 %%	Record a trade in the database
@@ -150,23 +129,18 @@ by_origin( Origin, Limit, Offset ) ->
 %%	ok			on success
 %%	{ error, Reason	}	on failure
 %%
--spec record( #sqerl_trade{} ) -> ok | { error, binary() }.
+-spec record( #sqerl_trade{} ) -> { ok, non_neg_integer() } | { error, binary() }.
 record( #sqerl_trade{ trader = Trader, origin = Origin, from_currency = FromCurrency, to_currency = ToCurrency, from_amount = FromAmount, to_amount = ToAmount, rate = Rate, time = Time } ) -> 
 	emysql:prepare( sqerl_trade_record_trader, 	<<"INSERT INTO traders ( ext_id ) VALUES ( ? ) ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID( id )">> ),
 	emysql:prepare( sqerl_trade_record_origin, 	<<"INSERT INTO origins ( name ) VALUES ( ? ) ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID( id )">> ),
 	emysql:prepare( sqerl_trade_record_currency, 	<<"INSERT INTO currencies ( name ) VALUES ( ? ) ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID( id )">> ),
 	emysql:prepare( sqerl_trade_record_trade, 	<<"INSERT INTO trades ( trader, origin, from_currency, to_currency, from_amount, to_amount, rate, time ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ? )">> ),
 
-	#ok_packet{ insert_id = TraderID } 		= emysql:execute( sqerl_db_pool, sqerl_trade_record_trader, [ Trader ] ),
-	#ok_packet{ insert_id = OriginID } 		= emysql:execute( sqerl_db_pool, sqerl_trade_record_origin, [ Origin ] ),
-	#ok_packet{ insert_id = FromCurrencyID } 	= emysql:execute( sqerl_db_pool, sqerl_trade_record_currency, [ FromCurrency ] ),
-	#ok_packet{ insert_id = ToCurrencyID } 		= emysql:execute( sqerl_db_pool, sqerl_trade_record_currency, [ ToCurrency ] ),
-	#ok_packet{} 					= emysql:execute( sqerl_db_pool, sqerl_trade_record_trade, [ 	TraderID, 
-															OriginID, 
-															FromCurrencyID, 
-															ToCurrencyID, 
-															sqerl_trade:from_money( FromAmount ), 
-															sqerl_trade:from_money( ToAmount ), 
-															sqerl_trade:from_money( Rate ), 
-															Time ] ),
-	ok.
+	{ ok, emysql:insert_id( emysql:execute( sqerl_db_pool, sqerl_trade_record_trade, [ 	emysql:insert_id( emysql:execute( sqerl_db_pool, sqerl_trade_record_trader, 	[ Trader ] ) ), 
+												emysql:insert_id( emysql:execute( sqerl_db_pool, sqerl_trade_record_origin, 	[ Origin ] ) ), 
+												emysql:insert_id( emysql:execute( sqerl_db_pool, sqerl_trade_record_currency, 	[ FromCurrency ] ) ), 
+												emysql:insert_id( emysql:execute( sqerl_db_pool, sqerl_trade_record_currency, 	[ ToCurrency ] ) ), 
+												FromAmount, 
+												ToAmount, 
+												Rate, 
+												Time ] ) ) }.

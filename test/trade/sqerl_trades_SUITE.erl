@@ -3,16 +3,16 @@
 
 -include_lib( "common_test/include/ct.hrl" ).
 -export( [ all/0 ] ).
--export( [ to_money/1, from_money/1 ] ).
+-export( [ from_json/1 ] ).
 
-all() -> [ to_money, from_money ].
+all() -> [ from_json ].
 
-to_money( _Config ) ->
-	{ 15, 67 } 	= sqerl_trades:to_money( <<"15.67">> ),
-	{ 10, 0 }	= sqerl_trades:to_money( <<"10">> ),
-	error		= sqerl_trades:to_money( <<"10.0.45">> ).
-
-from_money( _Config ) ->
-	<<"10.76">>	= sqerl_trades:from_money( { 10, 76 } ),
-	<<"15">>	= sqerl_trades:from_money( { 15, 0 } ),
-	error 		= sqerl_trades:from_money( { 15, 17, 18 } ).
+from_json( _Config ) ->
+	sqerl_trade:from_json( <<"{	\"userId\": \"134256\", 
+					\"currencyFrom\": \"EUR\", 
+					\"currencyTo\": \"GBP\", 
+					\"amountSell\": 1000, 
+					\"amountBuy\": 747.10, 
+					\"rate\": 0.7471, 
+					\"timePlaced\" : \"24-JAN-15 10:27:44\", 
+					\"originatingCountry\" : \"FR\"}">> ).
