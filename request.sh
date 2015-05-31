@@ -21,19 +21,15 @@ do
 	Rate=$((ToAmount / FromAmount))
 	Time=`date +"%d-%b-%y %H:%M:%S" | tr -s '[:lower:]'  '[:upper:]'`
 	
-	echo "Trader $Trader Converting $FromAmount $FromCurrency to $ToAmount $ToCurrency at rate $Rate"
+	echo "Trader $Trader Converting $FromAmount $FromCurrency to $ToAmount $ToCurrency at rate $Rate from $Origin"
 
 	JSON="{ \"userId\": \"$Trader\", \"currencyFrom\": \"$FromCurrency\", \"currencyTo\": \"$ToCurrency\", \"amountSell\": $FromAmount, \"amountBuy\": $ToAmount, \"rate\": $Rate, \"timePlaced\" : \"$Time\", \"originatingCountry\" : \"$Origin\"}"
 
-	echo "JSON: $JSON"
-
 	curl 	-H "Accept: */*" \
 		-H "Content-Type: application/json" \
-		--data "$JSON" $Server
+		--data "$JSON" $Server &> /dev/null
 
-	echo ""
-
-	sleep 0.1
+	sleep 0.2
 done
 
 
