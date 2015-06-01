@@ -113,7 +113,7 @@ execute( Req, Env, User, { ok, _RateInfo }, Factors, Limit, WindowLength ) ->
 %% If the user has exceeded the rate limit, return 429
 execute( Req, _Env, _User, { exceeded, _RateInfo }, _Factors, _Limit, _WindowLength ) ->
 	Body = jsx:encode( #{ 	<<"result">> 	=> <<"failure">>,
-				<<"error">>	=> <<"Rate Limit Exceeded">> } ),
+				<<"error">>	=> <<"rate limit exceeded">> } ),
 	{ ok, Req2 }	= cowboy_req:reply( 	?TOO_MANY_REQUESTS,
 						[ {<<"content-type">>, <<"application/json">> } ],
 						Body, Req ),

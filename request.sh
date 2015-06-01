@@ -29,7 +29,7 @@ do
 		-H "Content-Type: application/json" \
 		--data "$JSON" $Server
 
-	sleep 0.2
+	sleep 0.1
 done
 
 

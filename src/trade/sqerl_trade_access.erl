@@ -43,10 +43,10 @@ by_id( ID ) ->
 							t.rate		AS rate,
 							t.time		AS time
 						FROM trades AS t
-							JOIN traders AS tr ON tr.id = t.trader
-							JOIN origins AS o ON o.id = t.origin,
-							JOIN currencies AS fc ON fc.id = t.from_currency,
-							JOIN currencies AS tc ON rc.id = t.to_currency
+							JOIN traders AS tr ON tr.id = t.trader_id
+							JOIN origins AS o ON o.id = t.origin_id,
+							JOIN currencies AS fc ON fc.id = t.from_currency_id,
+							JOIN currencies AS tc ON rc.id = t.to_currency_id
 						WHERE t.id = ? LIMIT 1">> ),
 
 	result( emysql:execute( sqerl_db_pool, sqerl_trade_by_id, [ ID ] ), single ).
@@ -75,10 +75,10 @@ by_trader( Trader, Limit, Offset ) ->
 								t.rate		AS rate,
 								t.time		AS time
 							FROM trades AS t
-								JOIN traders AS tr ON tr.id = t.trader
-								JOIN origins AS o ON o.id = t.origin,
-								JOIN currencies AS fc ON fc.id = t.from_currency,
-								JOIN currencies AS tc ON rc.id = t.to_currency
+								JOIN traders AS tr ON tr.id = t.trader_id
+								JOIN origins AS o ON o.id = t.origin_id,
+								JOIN currencies AS fc ON fc.id = t.from_currency_id,
+								JOIN currencies AS tc ON rc.id = t.to_currency_id
 							WHERE tr.ext_id = ? 
 							ORDER BY t.time ASC
 							LIMIT ? OFFSET ?">> ),
@@ -109,10 +109,10 @@ by_origin( Origin, Limit, Offset ) ->
 								t.rate		AS rate,
 								t.time		AS time
 							FROM trades AS t
-								JOIN traders AS tr ON tr.id = t.trader
-								JOIN origins AS o ON o.id = t.origin,
-								JOIN currencies AS fc ON fc.id = t.from_currency,
-								JOIN currencies AS tc ON rc.id = t.to_currency
+								JOIN traders AS tr ON tr.id = t.trader_id
+								JOIN origins AS o ON o.id = t.origin_id,
+								JOIN currencies AS fc ON fc.id = t.from_currency_id,
+								JOIN currencies AS tc ON rc.id = t.to_currency_id
 							WHERE o.id = ? 
 							ORDER BY t.time ASC
 							LIMIT ? OFFSET ?">> ),
@@ -134,7 +134,7 @@ record( #sqerl_trade{ trader = Trader, origin = Origin, from_currency = FromCurr
 	emysql:prepare( sqerl_trade_record_trader, 	<<"INSERT INTO traders ( ext_id ) VALUES ( ? ) ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID( id )">> ),
 	emysql:prepare( sqerl_trade_record_origin, 	<<"INSERT INTO origins ( name ) VALUES ( ? ) ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID( id )">> ),
 	emysql:prepare( sqerl_trade_record_currency, 	<<"INSERT INTO currencies ( name ) VALUES ( ? ) ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID( id )">> ),
-	emysql:prepare( sqerl_trade_record_trade, 	<<"INSERT INTO trades ( trader, origin, from_currency, to_currency, from_amount, to_amount, rate, time ) VALUES ( ?, ?, ?, ?, ?, ?, ?, STR_TO_DATE( ?, '%e-%B-%y %k:%i:%s' ) )">> ),
+	emysql:prepare( sqerl_trade_record_trade, 	<<"INSERT INTO trades ( trader_id, origin_id, from_currency_id, to_currency_id, from_amount, to_amount, rate, time ) VALUES ( ?, ?, ?, ?, ?, ?, ?, STR_TO_DATE( ?, '%e-%B-%y %k:%i:%s' ) )">> ),
 
 	{ ok, emysql:insert_id( emysql:execute( sqerl_db_pool, sqerl_trade_record_trade, [ 	emysql:insert_id( emysql:execute( sqerl_db_pool, sqerl_trade_record_trader, 	[ Trader ] ) ), 
 												emysql:insert_id( emysql:execute( sqerl_db_pool, sqerl_trade_record_origin, 	[ Origin ] ) ), 

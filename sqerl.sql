@@ -22,19 +22,19 @@ CREATE TABLE currencies (
 	UNIQUE( name ) ) ENGINE=InnoDB CHARSET=utf8;
     
 CREATE TABLE trades (
-	id 				INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    trader 			INT UNSIGNED NOT NULL,
-    origin			INT UNSIGNED NOT NULL,
-    from_currency	INT UNSIGNED NOT NULL,
-    to_currency		INT UNSIGNED NOT NULL,
-    from_amount 	DECIMAL( 20, 5 ) NOT NULL,
-    to_amount		DECIMAL( 20, 5 ) NOT NULL,
-    rate			DECIMAL( 20, 5 ) NOT NULL,
-    time 			TIMESTAMP NOT NULL,
+	id 					INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    trader_id			INT UNSIGNED NOT NULL,
+    origin_id			INT UNSIGNED NOT NULL,
+    from_currency_id	INT UNSIGNED NOT NULL,
+    to_currency_id		INT UNSIGNED NOT NULL,
+    from_amount 		DECIMAL( 20, 5 ) NOT NULL,
+    to_amount			DECIMAL( 20, 5 ) NOT NULL,
+    rate				DECIMAL( 20, 5 ) NOT NULL,
+    time 				TIMESTAMP NOT NULL,
     PRIMARY KEY( id ),
     INDEX( time ),
     INDEX( rate ),
-	FOREIGN KEY( trader ) 			REFERENCES traders( id ) ON DELETE RESTRICT ON UPDATE CASCADE,
-    FOREIGN KEY( origin ) 			REFERENCES origins( id ) ON DELETE RESTRICT ON UPDATE CASCADE,
-    FOREIGN KEY( from_currency ) 	REFERENCES currencies( id ) ON DELETE RESTRICT ON UPDATE CASCADE,
-    FOREIGN KEY( to_currency ) 		REFERENCES currencies( id ) ON DELETE RESTRICT ON UPDATE CASCADE ) ENGINE=InnoDB CHARSET=utf8;
+	FOREIGN KEY( trader_id ) 			REFERENCES traders( id ) ON DELETE RESTRICT ON UPDATE CASCADE,
+    FOREIGN KEY( origin_id ) 			REFERENCES origins( id ) ON DELETE RESTRICT ON UPDATE CASCADE,
+    FOREIGN KEY( from_currency_id ) 	REFERENCES currencies( id ) ON DELETE RESTRICT ON UPDATE CASCADE,
+    FOREIGN KEY( to_currency_id ) 		REFERENCES currencies( id ) ON DELETE RESTRICT ON UPDATE CASCADE ) ENGINE=InnoDB CHARSET=utf8;
