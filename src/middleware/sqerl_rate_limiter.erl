@@ -12,7 +12,7 @@
 %%
 %%	cowboy_middleware exports
 %%
--export( [ execute/2 ] ).
+-export( [ execute/2, get/3, increment/1 ] ).
 
 %%
 %%	Set the ETS table ID to the name of this module
@@ -37,6 +37,11 @@
 			requests 	:: non_neg_integer() } ).	%% Number of requests so far inside the window
 
 %%
+%%	User keying type is either an IP address tuple or integer user ID
+%%
+-type user_key() :: tuple() | integer().
+
+%%
 %%	Get the rate information associated with the client identified by the given key. 
 %%
 %%	If no rate information exists for the specified client, or the window associated with the
@@ -57,6 +62,7 @@
 %%	{ ok, RateInfo }	- If the user's request rate is within limits
 %%	{ exceeded, RateInfo }	- if the user has exceeded the rate limit
 %%
+-spec get( user_key(), non_neg_integer(), non_neg_integer() ) -> { ok, #rate_info{} } | { exceeded, #rate_info{} }.
 get( Key, Limit, WindowLength ) ->
 	case ets:lookup( ?ETS_TABLE_ID, Key ) of
 		[ RateInfo = #rate_info{ window = Window, requests = Requests } ] -> 
@@ -78,6 +84,7 @@ get( Key, Limit, WindowLength ) ->
 %%
 %%	Increment the request count for the user with the specified key
 %%
+-spec increment( integer() | tuple() ) -> integer().
 increment( Key ) ->
 	ets:update_counter( ?ETS_TABLE_ID, Key, { #rate_info.requests, 1 } ).
 
@@ -125,6 +132,7 @@ execute( Req, Env, [ user | Rest ], Limit, WindowLength ) ->
 			%% Destructively gets the body from the request, so we need to reset it later
 			{ ok, Body, _Req4 } = cowboy_req:body( Req3 ),
 			Trade 	= sqerl_trade:from_json( Body ),
+			%% Interpret the userID as the limiting factor
 			User 	= sqerl_trade:user( Trade ),
 			%% Set the body again so that handlers can access it
 			Req5 	= cowboy_req:set( [ { buffer, Body } ], Req3 ),
@@ -162,6 +170,12 @@ init( _Args ) ->
 					{ write_concurrency, true },
 					public ] ),
 	{ ok, #state{ table = Table } }.
+
+%%
+%%	Handle a call to terminate the server
+%%
+handle_call( terminate, _From, State ) ->
+	{ stop, normal, ok, State };
 
 %%
 %%	Handle a synchronous call. Since this module is only for wrapping the
