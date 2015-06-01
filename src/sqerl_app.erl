@@ -19,8 +19,8 @@ start( _Type, _Args ) ->
 	{ ok, _ } = cowboy:start_http( 	my_http_listener, 
 					100, 
 					[ { port, 8080 } ],
-					[ { env, [ { dispatch, Dispatch } ] } ]
-		),
+					[ 	{ middlewares, [ sqerl_rate_limiter, cowboy_router, cowboy_handler ] },
+						{ env, [ { dispatch, Dispatch } ] } ] ),
 	sqerl_sup:start_link().
 
 stop( _State ) ->

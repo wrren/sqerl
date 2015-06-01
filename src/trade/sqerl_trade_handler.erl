@@ -41,7 +41,7 @@ from_json( Req, State = #state{ access = AccessModule } ) ->
 	%% Parse the JSON body and create a sqerl_trade record
 	Trade = sqerl_trade:from_json( Body ),
 	%% Notify any event handlers that a new trade has been received
-	gen_event:notify( { global, trade_event }, { new_trade, Trade } ),
+	sqerl_trade:notify( Trade ),
 	%% Write the trade to storage
 	AccessModule:record( Trade ),
 	%% Respond

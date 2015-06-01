@@ -24,7 +24,9 @@ init( _, _, _ ) ->
 	{ upgrade, protocol, cowboy_websocket }.
 
 %%
-%%	Called after upgrading to the websocket protocol, sets up module state
+%%	Called after upgrading to the websocket protocol, subscribes the feed handler
+%%	to the trade event server so that we can send new trades to connected clients as
+%%	they occur.
 %%
 websocket_init( _TransportName, Req, _Opts ) ->
 	sqerl_trade:subscribe( { sqerl_feed_handler, self() }, self() ),

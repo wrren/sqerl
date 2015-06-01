@@ -27,7 +27,7 @@ do
 
 	curl 	-H "Accept: */*" \
 		-H "Content-Type: application/json" \
-		--data "$JSON" $Server &> /dev/null
+		--data "$JSON" $Server
 
 	sleep 0.2
 done
