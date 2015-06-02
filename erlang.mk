@@ -1610,7 +1610,7 @@ export DIALYZER_PLT
 
 PLT_APPS ?=
 DIALYZER_DIRS ?= --src -r src
-DIALYZER_OPTS ?= -Werror_handling -Wrace_conditions \
+DIALYZER_OPTS ?= -Werror_handling -Wrace_conditions -I include/ \
 	-Wunmatched_returns # -Wunderspecs
 
 # Core targets.
