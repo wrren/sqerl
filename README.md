@@ -37,6 +37,8 @@ make ct
 
 Edit ```src/sqerl.app.src``` to set configuration values. Listen port, database connection and rate limiting options can be set. Changes to this file will only take effect after rebuilding the app using ```make```.
 
+Rate limiting factors indicates the rate limiters and the order in which they are applied. Both ```ip``` and ```user``` settings share the configured window length and request limit settings. Set the ```sqerl_rate_limit_factors``` settings to an empty list (```[]```) to disable rate limiting.
+
 # Interacting with sqerl
 
 Trade data should be POST'ed to the ```/trade``` route with a content type of ```application/json```. To test trade recording, use the ```request.sh``` script included with the repo. The first argument to the script is the trade submission URL. When running on the same server with the default listen port, the address would be ```http://localhost:8080/trade```. Request frequency is set to 10/s.
