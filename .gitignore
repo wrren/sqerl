@@ -1,0 +1,8 @@
+/.erlang.mk/
+/logs/
+ebin
+_rel
+deps
+.eunit
+*.plt
+*.beam
