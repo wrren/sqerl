@@ -15,6 +15,9 @@
 	{mod, {sqerl_app, []}},
 	{env,
 		[
+			%% sqerl listen port
+			{ sqerl_listen_port,					8080 },
+
 			%% sqerl database config
 			{ sqerl_db_hostname,					"localhost" },
 			{ sqerl_db_username,					"" },
@@ -24,7 +27,7 @@
 			{ sqerl_db_pool_size,					20 },
 
 			%% sqerl rate limiting
-			{ sqerl_rate_limit_factors,				[] },		%% Limiting Factors ( user, ip )
+			{ sqerl_rate_limit_factors,				[ user, ip ] },	%% Limiting Factors ( user, ip )
 			{ sqerl_rate_limit_window,				600 },		%% Rate Limit Window in Seconds
 			{ sqerl_rate_limit,					10 }		%% Max Requests Per Window
 		] }

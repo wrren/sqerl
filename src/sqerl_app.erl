@@ -4,6 +4,7 @@
 -export( [ start/2, stop/1 ]).
 
 start( _Type, _Args ) ->
+	{ ok, Listen }		= application:get_env( sqerl_listen_port ),
 	{ ok, Hostname } 	= application:get_env( sqerl_db_hostname ),
 	{ ok, Username } 	= application:get_env( sqerl_db_username ),
 	{ ok, Password } 	= application:get_env( sqerl_db_password ),
@@ -18,9 +19,12 @@ start( _Type, _Args ) ->
 
 	{ ok, _ } = cowboy:start_http( 	my_http_listener, 
 					100, 
-					[ { port, 8080 } ],
+					[ { port, Listen } ],
 					[ 	{ middlewares, [ sqerl_rate_limiter, cowboy_router, cowboy_handler ] },
 						{ env, [ { dispatch, Dispatch } ] } ] ),
+
+	lager:info( "sqerl listening on port ~p", [ Listen ] ),
+
 	sqerl_sup:start_link().
 
 stop( _State ) ->
