@@ -1,6 +1,6 @@
 # Introduction
 
-Sqerl/Squirrel Market Trade Processor. Written as part of the application process for [CurrencyFair](hhttps://www.currencyfair.com/). Accepts incoming currency trade information encoded in JSON through POST to the trade controller and records it in the configured MySQL database after decoding and validation. Implements two-tier rate limiting; all requests can be rate-limited based on IP Address while trade submissions can be rate-limited based on the user ID of the trade. 
+Sqerl/Squirrel Market Trade Processor. Written as part of the application process for [CurrencyFair](https://www.currencyfair.com/). Accepts incoming currency trade information encoded in JSON through POST to the trade controller and records it in the configured MySQL database after decoding and validation. Implements two-tier rate limiting; all requests can be rate-limited based on IP Address while trade submissions can be rate-limited based on the user ID of the trade. 
 
 After successful storage an event is fired through a gen_event manager. Clients connected via web socket to the feed controller will have trade data sent to them as they are processed. For an example of a trade feed display front-end based on Google's WebGL Globe, see [Peacock](http://github.com/wrren/peacock).
 
