@@ -40,3 +40,9 @@ Edit ```src/sqerl.app.src``` to set configuration values. Listen port, database 
 # Interacting with sqerl
 
 Trade data should be POST'ed to the ```/trade``` route with a content type of ```application/json```. To test trade recording, use the ```request.sh``` script included with the repo. The first argument to the script is the trade submission URL. When running on the same server with the default listen port, the address would be ```http://localhost:8080/trade```. Request frequency is set to 10/s.
+
+To receive trade submission events over websocket, connect to the ```/feed``` route. If using  [peacock](https://github.com/wrren/peacock), edit ```public/app/js/config.js``` and set the websocket URL. Example configuration:
+
+```
+var config = { server: "ws://example.com:8080/feed", max_feed_items: 30 };
+```
