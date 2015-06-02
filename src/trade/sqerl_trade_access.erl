@@ -134,7 +134,7 @@ record( #sqerl_trade{ trader = Trader, origin = Origin, from_currency = FromCurr
 	emysql:prepare( sqerl_trade_record_trader, 	<<"INSERT INTO traders ( ext_id ) VALUES ( ? ) ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID( id )">> ),
 	emysql:prepare( sqerl_trade_record_origin, 	<<"INSERT INTO origins ( name ) VALUES ( ? ) ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID( id )">> ),
 	emysql:prepare( sqerl_trade_record_currency, 	<<"INSERT INTO currencies ( name ) VALUES ( ? ) ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID( id )">> ),
-	emysql:prepare( sqerl_trade_record_trade, 	<<"INSERT INTO trades ( trader_id, origin_id, from_currency_id, to_currency_id, from_amount, to_amount, rate, time ) VALUES ( ?, ?, ?, ?, ?, ?, ?, STR_TO_DATE( ?, '%e-%B-%y %k:%i:%s' ) )">> ),
+	emysql:prepare( sqerl_trade_record_trade, 	<<"INSERT INTO trades ( trader_id, origin_id, from_currency_id, to_currency_id, from_amount, to_amount, rate, time ) VALUES ( ?, ?, ?, ?, ?, ?, ?, STR_TO_DATE( ?, '%e-%b-%y %k:%i:%s' ) )">> ),
 
 	{ ok, emysql:insert_id( emysql:execute( sqerl_db_pool, sqerl_trade_record_trade, [ 	emysql:insert_id( emysql:execute( sqerl_db_pool, sqerl_trade_record_trader, 	[ Trader ] ) ), 
 												emysql:insert_id( emysql:execute( sqerl_db_pool, sqerl_trade_record_origin, 	[ Origin ] ) ), 

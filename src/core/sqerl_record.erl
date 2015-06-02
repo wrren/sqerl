@@ -5,39 +5,58 @@
 
 %%
 %%	Given JSON in binary form, a mapping of
-%%	JSON keys to record field atoms and the output of record_info
+%%	record field atoms to JSON key strings, with optional validation specifications, and the output of record_info
 %%	called on the target record, generate a record whose values are
 %%	set from the given JSON data.
 %%
 %% Parameters:
 %%	JSON		- JSON in binary form
-%%	KeyMap		- Map of record keys as atoms to JSON keys as binary strings
+%%	KeyMap		- Map of record keys as atoms to JSON keys as binary strings with validation parameters
 %%	RecordName	- Record name atom
 %%	RecordFields	- List of record fields returned from record_info call
 %%
 %% Returns:
-%%	{ NotFound, Record }	- List of fields that were not found and the output record
+%%	{ Errors, Record }	- List of fields that failed to validate and the output record
 %%
 -spec from_json( binary(), #{}, atom(), [ atom() ] ) -> { [ atom() ], tuple() }.
 from_json( JSON, KeyMap, RecordName, RecordFields ) ->
 	from_json( RecordFields, jsx:decode( JSON, [ return_maps ] ), KeyMap, [], RecordName, [] ).
 
 -spec from_json( [ atom() ], #{}, #{}, [ atom() ], atom(), [ term() ] ) -> { [ atom() ], tuple() }.
-from_json( [ Key | Fields ], JSON, KeyMap, NotFound, RecordName, Result ) ->
+from_json( [ Key | Fields ], JSON, KeyMap, Errors, RecordName, Result ) ->
 	case maps:find( Key, KeyMap ) of
+
+		%% If the key includes a validation spec, apply it before continuing
+		{ ok, { JSONKey, ValidationSpec } } ->
+			case maps:find( JSONKey, JSON ) of
+				{ ok, Value } 	-> 
+					case sqerl_validator:validate( Value, ValidationSpec ) of 
+						{ ok, Value } 		-> from_json( Fields, JSON, KeyMap, Errors, RecordName, [ Value | Result ] );
+						{ error, Value, E }	-> from_json( Fields, JSON, KeyMap, [ { Key, E } | Errors ], RecordName, [ Value | Result ] )
+					end;
+				_		-> 
+					case sqerl_validator:validate( undefined, ValidationSpec ) of 
+						{ ok, Value } 		-> from_json( Fields, JSON, KeyMap, Errors, RecordName, [ Value | Result ] );
+						{ error, Value, E }	-> from_json( Fields, JSON, KeyMap, [ { Key, E } | Errors ], RecordName, [ Value | Result ] )
+					end
+			end;
+
+		%% If there's no validation spec, continue as normal
 		{ ok, JSONKey } ->
 			case maps:find( JSONKey, JSON ) of
-				{ ok, Value } 	-> from_json( Fields, JSON, KeyMap, NotFound, RecordName, [ Value | Result ] );
-				_		-> from_json( Fields, JSON, KeyMap, [ Key | NotFound ], RecordName, [ undefined | Result ] )
+				{ ok, Value } 	-> from_json( Fields, JSON, KeyMap, Errors, RecordName, [ Value | Result ] );
+				_		-> from_json( Fields, JSON, KeyMap, [ Key | Errors ], RecordName, [ undefined | Result ] )
 			end;
+
+		%% If there's no key, attempt to retrieve a key with the same name as the record field name
 		_ -> 
 			case maps:find( atom_to_binary( Key, utf8 ), JSON ) of
-				{ ok, Value } 	-> from_json( Fields, JSON, KeyMap, NotFound, RecordName, [ Value | Result ] );
-				_		-> from_json( Fields, JSON, KeyMap, [ Key | NotFound ], RecordName, [ undefined | Result ] )
+				{ ok, Value } 	-> from_json( Fields, JSON, KeyMap, Errors, RecordName, [ Value | Result ] );
+				_		-> from_json( Fields, JSON, KeyMap, [ Key | Errors ], RecordName, [ undefined | Result ] )
 			end
 	end;
 
-from_json( [], _, _, NotFound, RecordName, Result ) -> { NotFound, list_to_tuple( [ RecordName | lists:reverse( Result ) ] ) }.
+from_json( [], _, _, Errors, RecordName, Result ) -> { Errors, list_to_tuple( [ RecordName | lists:reverse( Result ) ] ) }.
 
 %%
 %%	Given a record, an optional mapping between record field names and JSON key name, and

@@ -10,14 +10,14 @@
 all() -> [ from_json, to_json ].
 
 from_json( _Config ) ->
-	Trade = sqerl_trade:from_json( <<"{	\"userId\": \"134256\", 
-						\"currencyFrom\": \"EUR\", 
-						\"currencyTo\": \"GBP\", 
-						\"amountSell\": 1000, 
-						\"amountBuy\": 747.10, 
-						\"rate\": 0.7471, 
-						\"timePlaced\" : \"24-JAN-15 10:27:44\", 
-						\"originatingCountry\" : \"FR\"}">> ),
+	{ [ id ], Trade } = sqerl_trade:from_json( <<"{	\"userId\": \"134256\", 
+							\"currencyFrom\": \"EUR\", 
+							\"currencyTo\": \"GBP\", 
+							\"amountSell\": 1000, 
+							\"amountBuy\": 747.10, 
+							\"rate\": 0.7471, 
+							\"timePlaced\" : \"24-JAN-15 10:27:44\", 
+							\"originatingCountry\" : \"FR\"}">> ),
 
 	Trade = #sqerl_trade{	id		= undefined,
 				trader		= <<"134256">>,

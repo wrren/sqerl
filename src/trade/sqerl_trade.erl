@@ -13,25 +13,24 @@
 %%	JSON	- Binary string containing JSON trade data
 %%
 %% Returns:
-%%	sqerl_trade record
+%%	{ ok, Trade }			- If the trade record was decoded and validated successfully
+%%	{ error, Errors, Trade }	- If validation errors occurred while decoding the record
 %%
--spec from_json( binary() ) -> #sqerl_trade{}.
+-spec from_json( binary() ) -> { ok, #sqerl_trade{} } | { error, #sqerl_trade{}, [ binary() ] }.
 from_json( JSON ) ->
 	
 	%% Mapping of JSON keys to record field names
-	Keys = #{ 	trader		=> <<"userId">>, 
-			from_currency	=> <<"currencyFrom">>,
-			to_currency	=> <<"currencyTo">>,
-			from_amount	=> <<"amountSell">>,
-			to_amount	=> <<"amountBuy">>,
-			rate		=> <<"rate">>,
-			time		=> <<"timePlaced">>,
-			origin		=> <<"originatingCountry">> },
+	Keys = #{ 	trader		=> { <<"userId">>, 		[ required, string ] }, 
+			from_currency	=> { <<"currencyFrom">>, 	[ required, string,  { length, 3 } ] },
+			to_currency	=> { <<"currencyTo">>, 		[ required, string,  { length, 3 } ] },
+			from_amount	=> { <<"amountSell">>,		[ required, numeric, { min, 0 } ] },	
+			to_amount	=> { <<"amountBuy">>,		[ required, numeric, { min, 0 } ] },
+			rate		=> { <<"rate">>,		[ required, numeric, { min, 0 } ] },
+			time		=> { <<"timePlaced">>,		[ required, string, { length, 14, 18 } ] },
+			origin		=> { <<"originatingCountry">>,	[ required, string, { length, 2 } ] } },
 
 	%% Incoming JSON can't have a DB ID field, but everything else should be present
-	{ [ id ], Trade } = sqerl_record:from_json( JSON, Keys, sqerl_trade, record_info( fields, sqerl_trade ) ),
-	Trade.
-
+	sqerl_record:from_json( JSON, Keys, sqerl_trade, record_info( fields, sqerl_trade ) ).
 
 %%
 %%	Convenience function that extracts and returns the trader ID from a trade record so that the
